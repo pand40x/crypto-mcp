@@ -22,9 +22,43 @@ Get the current price of a cryptocurrency.
 ```json
 {
   "symbol": "BTCUSDT",
-  "price": 43250.50,
+  "price": 90729.18,
+  "priceChange": -208.7,
+  "priceChangePercent": -0.229,
+  "volume": 7619.95,
+  "quoteVolume": 691347321.24,
+  "high": 91247.16,
+  "low": 90155.47,
   "source": "binance",
-  "timestamp": 1701234567890
+  "timestamp": 1764443782752
+}
+```
+
+### `batch_prices`
+Get current prices for MULTIPLE cryptocurrencies in parallel.
+
+**Parameters:**
+- `symbols` (array of strings): Array of trading pair symbols (e.g., `["BTC", "ETH", "BNB"]`)
+
+**Returns:**
+```json
+{
+  "id": "batch_crypto_prices",
+  "title": "Cryptocurrency Prices",
+  "count": 3,
+  "quotes": [
+    {
+      "symbol": "BTCUSDT",
+      "name": "BTC",
+      "price": 90729.18,
+      "change": -208.7,
+      "changePercent": -0.229,
+      "volume": 7619.95,
+      "high": 91247.16,
+      "low": 90155.47
+    },
+    // ... other quotes
+  ]
 }
 ```
 
