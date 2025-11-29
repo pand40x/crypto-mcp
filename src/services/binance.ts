@@ -13,17 +13,30 @@ export class BinanceService {
     });
 
     async getPrice(symbol: string): Promise<PriceData> {
-        // Binance uses BTCUSDT format
-        const formattedSymbol = symbol.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+        // Normalize symbol: BTC -> BTCUSDT, ETH -> ETHUSDT
+        let formattedSymbol = symbol.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+
+        // Add USDT suffix if not already present
+        if (!formattedSymbol.endsWith('USDT') && !formattedSymbol.includes('USD')) {
+            formattedSymbol = `${formattedSymbol}USDT`;
+        }
 
         try {
-            const response = await this.client.get('/api/v3/ticker/price', {
+            const response = await this.client.get('/api/v3/ticker/24hr', {
                 params: { symbol: formattedSymbol }
             });
 
+            const data = response.data;
+
             return {
                 symbol: formattedSymbol,
-                price: parseFloat(response.data.price),
+                price: parseFloat(data.lastPrice),
+                priceChange: parseFloat(data.priceChange),
+                priceChangePercent: parseFloat(data.priceChangePercent),
+                volume: parseFloat(data.volume),
+                quoteVolume: parseFloat(data.quoteVolume),
+                high: parseFloat(data.highPrice),
+                low: parseFloat(data.lowPrice),
                 source: 'binance',
                 timestamp: Date.now()
             };
@@ -34,7 +47,12 @@ export class BinanceService {
     }
 
     async getKlines(symbol: string, interval: string, startTime?: number, endTime?: number, limit: number = 1000): Promise<number[][]> {
-        const formattedSymbol = symbol.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+        // Normalize symbol for klines too
+        let formattedSymbol = symbol.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+        if (!formattedSymbol.endsWith('USDT') && !formattedSymbol.includes('USD')) {
+            formattedSymbol = `${formattedSymbol}USDT`;
+        }
+
         const allKlines: number[][] = [];
 
         // Default to last 24h if not specified

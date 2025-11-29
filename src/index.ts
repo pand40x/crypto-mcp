@@ -29,16 +29,32 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         tools: [
             {
                 name: 'get_price',
-                description: 'Get the current price of a cryptocurrency. Tries Binance first, falls back to CoinMarketCap.',
+                description: 'Get the current price of a SINGLE cryptocurrency. For multiple cryptos, use batch_prices instead.',
                 inputSchema: {
                     type: 'object',
                     properties: {
                         symbol: {
                             type: 'string',
-                            description: 'Cryptocurrency symbol (e.g., BTCUSDT, ETHUSDT)',
+                            description: 'Cryptocurrency symbol (e.g., BTC, ETH, ASTER)',
                         },
                     },
                     required: ['symbol'],
+                },
+            },
+            {
+                name: 'batch_prices',
+                description: 'Get current prices for MULTIPLE cryptocurrencies in parallel (max 50). Use this when user requests multiple crypto prices.',
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        symbols: {
+                            type: 'array',
+                            items: { type: 'string' },
+                            description: 'Array of cryptocurrency symbols (e.g., ["BTC", "ETH", "ASTER"])',
+                            maxItems: 50
+                        },
+                    },
+                    required: ['symbols'],
                 },
             },
             {
@@ -88,6 +104,52 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                     {
                         type: 'text',
                         text: JSON.stringify(data),
+                    },
+                ],
+            };
+        } else if (request.params.name === 'batch_prices') {
+            const args = z
+                .object({
+                    symbols: z.array(z.string()).max(50),
+                })
+                .parse(request.params.arguments);
+
+            // Fetch prices in parallel
+            const results = await Promise.allSettled(
+                args.symbols.map(symbol => aggregator.getPrice(symbol))
+            );
+
+            const successful = results
+                .filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled')
+                .map(r => r.value);
+
+            const failed = results
+                .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+                .map(r => r.reason.message);
+
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({
+                            id: 'batch_crypto_prices',
+                            title: 'Cryptocurrency Prices',
+                            count: successful.length,
+                            total: args.symbols.length,
+                            failed: failed.length,
+                            errors: failed,
+                            quotes: successful.map(item => ({
+                                symbol: item.symbol,
+                                name: item.name || item.symbol.replace('USDT', ''),
+                                price: item.price,
+                                change: item.priceChange,
+                                changePercent: item.priceChangePercent,
+                                volume: item.volume,
+                                quoteVolume: item.quoteVolume,
+                                high: item.high,
+                                low: item.low
+                            }))
+                        }),
                     },
                 ],
             };
