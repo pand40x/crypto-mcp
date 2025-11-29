@@ -27,7 +27,7 @@ export class AggregatorService {
         }
     }
 
-    async getKlines(symbol: string, interval: string, startTime?: number, endTime?: number): Promise<KlineData[]> {
+    async getKlines(symbol: string, interval: string, startTime?: number, endTime?: number): Promise<number[][]> {
         // For Klines, we primarily rely on Binance as CMC free tier doesn't support OHLCV well.
         // If Binance fails, we might just have to throw error or return empty, 
         // unless we implement a very basic "current price as a candle" fallback which is not useful for history.

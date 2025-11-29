@@ -43,7 +43,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
             {
                 name: 'get_history',
-                description: 'Get historical kline (candlestick) data for a cryptocurrency from Binance.',
+                description: 'Get historical kline (candlestick) data for a cryptocurrency from Binance. Returns an array of arrays: [OpenTime, Open, High, Low, Close, Volume, CloseTime][].',
                 inputSchema: {
                     type: 'object',
                     properties: {
@@ -87,7 +87,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify(data, null, 2),
+                        text: JSON.stringify(data),
                     },
                 ],
             };
@@ -111,7 +111,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify(data, null, 2),
+                        text: JSON.stringify(data),
                     },
                 ],
             };

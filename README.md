@@ -17,7 +17,9 @@ Get the current price of a cryptocurrency.
   - `symbol` (string): The trading pair symbol (e.g., "BTCUSDT").
 
 ### `get_history`
-Get historical candlestick data.
+Get historical candlestick data from Binance.
+- **Returns**: `Array<Array<number>>` (Optimized for token usage).
+- **Format**: `[[OpenTime, Open, High, Low, Close, Volume, CloseTime], ...]`
 - **Arguments**:
   - `symbol` (string): The trading pair symbol.
   - `interval` (string): Time interval (e.g., "1h", "1d").

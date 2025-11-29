@@ -33,9 +33,9 @@ export class BinanceService {
         }
     }
 
-    async getKlines(symbol: string, interval: string, startTime?: number, endTime?: number, limit: number = 1000): Promise<KlineData[]> {
+    async getKlines(symbol: string, interval: string, startTime?: number, endTime?: number, limit: number = 1000): Promise<number[][]> {
         const formattedSymbol = symbol.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-        const allKlines: KlineData[] = [];
+        const allKlines: number[][] = [];
 
         // Default to last 24h if not specified
         let currentStartTime = startTime || (Date.now() - 24 * 60 * 60 * 1000);
@@ -57,23 +57,25 @@ export class BinanceService {
                 const data = response.data;
                 if (!data || data.length === 0) break;
 
-                const klines: KlineData[] = data.map((k: any[]) => ({
-                    openTime: k[0],
-                    open: parseFloat(k[1]),
-                    high: parseFloat(k[2]),
-                    low: parseFloat(k[3]),
-                    close: parseFloat(k[4]),
-                    volume: parseFloat(k[5]),
-                    closeTime: k[6]
-                }));
+                // Map to [OpenTime, Open, High, Low, Close, Volume, CloseTime]
+                // Binance returns strings for prices, we convert to numbers
+                const klines: number[][] = data.map((k: any[]) => [
+                    k[0],                 // OpenTime
+                    parseFloat(k[1]),     // Open
+                    parseFloat(k[2]),     // High
+                    parseFloat(k[3]),     // Low
+                    parseFloat(k[4]),     // Close
+                    parseFloat(k[5]),     // Volume
+                    k[6]                  // CloseTime
+                ]);
 
                 allKlines.push(...klines);
 
                 // Update startTime to the closeTime of the last candle + 1ms
                 const lastCandle = klines[klines.length - 1];
-                currentStartTime = lastCandle.closeTime + 1;
+                currentStartTime = lastCandle[6] + 1;
 
-                // Safety break if we reached the end or got fewer items than limit (meaning no more data)
+                // Safety break
                 if (klines.length < limit || currentStartTime >= targetEndTime) {
                     break;
                 }
